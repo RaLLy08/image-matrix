@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .matrix {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(60%, -50%);
+            margin: 0;
+            color: black;
+        }
+    </style>
+    
+</head>
+<body>
+    <script >
+        window.onload = function() {
+
+            const matrixToPlainText = (matrix) => {
+                return JSON.stringify(wbMatrix).replace(/\],\[/g, '\n').replace(/]|\[/g, '').replace(/,/g, ' ');
+            }
+        
+            class MatrixCanvasImage {
+                matrix = [];
+                width = 0;
+                height = 0;
+                imageData = null;
+                constructor(canvas) {
+                    this.canvas = canvas;
+           
+                    this.canvas.width = this.width;
+                    this.canvas.height = this.height;
+
+                    const options = { alpha: false }
+                    this.ctx = canvas.getContext('2d', options);
+                    this.ctx.imageSmoothingEnabled = false;
+                }
+
+                setRGBAMatrix(matrix) {
+                    this.matrix = matrix;
+                    this.#setMatrixSize();
+                    
+                    this.#setImageData();
+                    this.#putImageDataFromMatrix();
+                }
+
+                setWBMatrix(wbMatrix){
+                    this.matrix = wbMatrix;
+                    this.#setMatrixSize();
+
+                    this.#convertWbToRgb(wbMatrix);
+
+                    this.#setImageData();
+                    this.#putImageDataFromMatrix();
+                }
+
+                #setImageData() {
+                    this.imageData = this.ctx.createImageData(this.width, this.height);
+                }
+                /**
+                 * [
+                 *  [1, 0],
+                 *  [0, 1],
+                 * ] 
+                 * 
+                 * [
+                 *  [[255,255,255,255], [0,0,0,255]],
+                 *  [[0,0,0,255], [255,255,255,255]],
+                 * ] 
+                 */ 
+                #convertWbToRgb() {
+                    const { width, height, matrix } = this;
+                    
+                    for (let i = 0; i < height; i++) {
+                        for (let j = 0; j < width; j++) {
+                            const wb = matrix[i][j];
+
+                            matrix[i][j] = MatrixCanvasImage.wbToRgba(wb)
+                        }
+                    }
+                }
+
+                #putImageDataFromMatrix = () => {
+                    const { width, height, matrix, ctx } = this;
+
+                    const data = this.imageData.data;
+
+                    for (let i = 0; i < height; i++) {
+                        for (let j = 0; j < width; j++) {
+                            const index = (i * width + j) * 4;
+                            const [r, g, b, a] = matrix[i][j];
+
+                            data[index] = r;
+                            data[index + 1] = g;
+                            data[index + 2] = b;
+                            data[index + 3] = a;
+                        }
+                    }
+                    this.ctx.putImageData(this.imageData, 0, 0); 
+                }
+
+                #setMatrixSize() {
+                    this.height = this.matrix.length;
+                    this.width = this.matrix[0].length;
+                    this.canvas.width = this.width;
+                    this.canvas.height = this.height;
+                }
+
+                /**
+                 * @param {number} value
+                 * @returns {Array<number, number, number, number>}
+                 */
+                static wbToRgba = (value) => {
+                    if (value === 1) return [255,255,255,255];
+                    return [0,0,0,255];
+                }
+            }
+            const canvas = document.getElementById('canvas');
+            const matrixDiv = document.getElementById('matrix');
+
+            const matrixCanvasImage = new MatrixCanvasImage(canvas);
+            // TODO: upload photo
+            const wbMatrix = [
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                [0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+            ]
+
+            matrixDiv.innerText = matrixToPlainText(wbMatrix);
+            
+            matrixCanvasImage.setWBMatrix(wbMatrix);
+        }
+    </script>
+    <div class="container">
+        <canvas style="scale:15;" id="canvas"></canvas>
+        <pre class="matrix" id="matrix"> </pre>
+    </div>
+</body>
+</html>
