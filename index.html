@@ -40,9 +40,15 @@
                 }
             }
 
-            const mapMatrixToWB = mapMatrix((el) => {
-                return el[0];
-            })
+
+            const mapMatrixFns = {
+                pickFirst: mapMatrix((el) => {
+                    return el[0];
+                }),
+                inverse: mapMatrix((el) => {
+                    return [255-el[0], 255-el[1], 255-el[2], el[3]];
+                })
+            }
 
             class MatrixCanvasImage {
                 static PIXELSIZE = 4;
@@ -149,21 +155,16 @@
             const matrixCanvasImage = new MatrixCanvasImage(canvas);
 
             matrixCanvasImage.loadImage(imgs.lena).then(e => {
-                console.log(matrixCanvasImage);
+                // matrixCanvasImage.setRGBAMatrix(
+                //     mapMatrixFns.inverse(matrixCanvasImage.matrix)
+                // )
+                
             });
-            
-            // matrixCanvasImage.setRGBAMatrix([
-            //   [[255, 255, 255, 255], [255, 255, 255, 255], [0, 0, 0, 255]], 
-            //   [[255, 255, 255, 255], [255, 255, 255, 255], [0, 0, 0, 255]],
-            //   [[255, 255, 255, 255], [255, 255, 255, 255], [0, 0, 0, 255]], 
-            //   [[255, 255, 255, 255], [255, 255, 255, 255], [0, 0, 0, 255]],
-            //   [[0, 0, 0, 255], [255, 255, 255, 255], [0, 0, 0, 255]], 
-            //   [[255, 255, 255, 255], [255, 255, 255, 255], [0, 0, 0, 255]],
-            // ]);
+
 
             btnShowMatrix.onclick = function() {
                 setTable(
-                    mapMatrixToWB(matrixCanvasImage.matrix)
+                    mapMatrixFns.pickFirst(matrixCanvasImage.matrix)
                 )
             }
 
