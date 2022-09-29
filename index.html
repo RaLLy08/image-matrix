@@ -183,6 +183,7 @@
                     for (let j = 0; j < rowData.length; j++) {
                         const cellData = rowData[j];
                         const cell = document.createElement('td');
+                        cell.style.backgroundColor = `rgb(${cellData}, ${cellData}, ${cellData})`;
 
                         cell.appendChild(document.createTextNode(cellData));
                         row.appendChild(cell);
