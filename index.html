@@ -5,13 +5,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.min.js"></script> -->
+    <script src="https://cdn.plot.ly/plotly-2.14.0.min.js"></script>
     <style type="text/css">
         body {
             padding: 0;
             margin: 0;
         }
+        .canvas-container {
+            display: flex;
+        }
         canvas {
-            display: block;
             margin-bottom: 10px;
         }
     </style>
@@ -47,7 +51,12 @@
                 }
             }
 
-            const resizeTo = (matrix, limitSize=100000) => {
+            const generateMatrix = (w, h, mapFn=(rowIndex, colIndex)=> 0) => {
+                return Array.from({length: h}, (_, i) => Array.from({length: w}, (_, j) => mapFn(i, j)))
+            }
+            const getWBCell = (el) => [el, el, el, 255];
+
+            const resizeMatrixTo = (matrix, limitSize=100000) => {
                     const height = matrix.length;
                     const width = matrix[0].length;
                     
@@ -75,6 +84,26 @@
                     return newMatrix;
             }
 
+            const quantize = factor => el => {
+                const [r, g, b, a] = el;
+
+                const quantizePixel = (el) => Math.floor((el + 1) / factor) * factor;
+                
+                return [quantizePixel(r), quantizePixel(g), quantizePixel(b), a];
+            };
+
+            const showHistogram = (matrix) => {
+                const toFlat = mapMatrixFns.pickFirst(matrixCanvasImage.matrix).flat(Infinity);
+
+                Plotly.newPlot(plotly,  [
+                    {
+                        x: toFlat,
+                        type: 'histogram'
+                    }
+                
+                ])
+            }
+
             const mapMatrixFns = {
                 pickFirst: mapMatrix((el) => {
                     return el[0];
@@ -86,11 +115,13 @@
 
             class MatrixCanvasImage {
                 static PIXELSIZE = 4;
+                
                 matrix = [];
                 width = 0;
                 height = 0;
                 imageData = null;
                 onImageLoad = () => {};
+            
                 constructor(canvas) {
                     this.canvas = canvas;
            
@@ -183,31 +214,33 @@
                 }
 
             }
+            
             const canvas = document.getElementById('canvas');
             const matrixCanvasImage = new MatrixCanvasImage(canvas);
 
             const onLoadImage = () => {
                 const { height, width } = matrixCanvasImage.imageData;
-                const resized = resizeTo(matrixCanvasImage.matrix, 50625);
+                const resized = resizeMatrixTo(matrixCanvasImage.matrix, 50625);
 
                 if (resized) {
                     matrixCanvasImage.setRGBAMatrix(
                         resized
                     );
                     
-                    showInfo(` resized:\n height ${height} -> ${matrixCanvasImage.imageData.height}\n width ${width} -> ${matrixCanvasImage.imageData.width}`);
+                    showInfo(`resized:\n height ${height} -> ${matrixCanvasImage.imageData.height}\n width ${width} -> ${matrixCanvasImage.imageData.width}`);
                 }
+
+                // matrixCanvasImage.setRGBAMatrix(
+                //     mapMatrix(quantize(1))(matrixCanvasImage.matrix)
+                // );
+                showHistogram(matrixCanvasImage.matrix);
             }
-            
+
             matrixCanvasImage.loadImage(imgs.lena).then(onLoadImage);
+            // matrixCanvasImage.setRGBAMatrix(generateMatrix(128, 128, (i, j) => getWBCell(i + j + 1)));
+            
+            // showHistogram(matrixCanvasImage.matrix);
 
-            const matrixDiv = document.getElementById('matrix');
-            const btnShowMatrix = document.getElementById('show-matrix');
-            const display = document.getElementById('display');
-            const imageLoader = document.getElementById('image-input');
-
-
-            // TODO: use fn
 
             btnShowMatrix.onclick = function() {
                 setTable(
@@ -226,7 +259,10 @@
             });
             
             function showInfo(text) {
-                display.innerHTML = text;
+                const p = document.createElement('p');
+                p.innerText = text;
+
+                display.appendChild(p);
             }
 
             function setTable(tableData) {
@@ -245,7 +281,9 @@
                         const cellData = rowData[j];
                         const cell = document.createElement('td');
                         cell.style.backgroundColor = `rgb(${cellData}, ${cellData}, ${cellData})`;
-
+                        cell.style.height = '20px';
+                        cell.style.width = '20px';
+                        
                         cell.appendChild(document.createTextNode(cellData));
                         row.appendChild(cell);
                     }
@@ -256,11 +294,14 @@
         }
     </script>
     <div class="container">
-        <canvas id="canvas"></canvas>
-        <input type="file" id="image-input" accept="image/jpeg, image/png, image/jpg">
-        <button id="show-matrix">Show matrix in html</button>
-        <pre style="padding:0; margin:0" id="display"></pre>
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        <input type="file" id="imageLoader" accept="image/jpeg, image/png, image/jpg">
+        <button id="btnShowMatrix">Show matrix in html</button>
+        <div style="padding:0; margin:0" id="display"></div>
         <table style="font-size: 12px" id="matrix"></table>
+        <div id="plotly"> </div>
     </div>
 </body>
 </html>
