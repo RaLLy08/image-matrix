@@ -153,7 +153,7 @@
             const quantize = factor => el => {
                 const [r, g, b, a] = el;
 
-                const quantizePixel = (el) => Math.floor((el + 1) / factor) * factor;
+                const quantizePixel = (pixel) => Math.floor((pixel + 1) / factor) * factor;
                 
                 return [quantizePixel(r), quantizePixel(g), quantizePixel(b), a];
             };
