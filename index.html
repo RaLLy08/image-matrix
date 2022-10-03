@@ -33,6 +33,17 @@
         };
 
         window.onload = function() {
+            /**
+             input: [
+                [1, 2],
+                [3, 4]
+             ],
+                        fn(el => el*2)
+             output: [
+                [2, 4],
+                [6, 8]
+             ]
+             */
             const mapMatrix = (fn=(el, row, column)=>{}) => {
                 return (matrix) => {
                     const height = matrix.length;
@@ -43,10 +54,68 @@
                         newMatrix[i] = [];
                         for (let j = 0; j < width; j++) {
                             const el = matrix[i][j];
-
+                            
                             newMatrix[i][j] = fn(el, i, j)
                         }
                     }
+                    
+                    return newMatrix;
+                }
+            }
+
+            /**
+             input: [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+                [9, 10, 11, 12],
+                [13, 14, 15, 16]
+             ]
+                        fn(subMatrix => subMatrix[0][0])
+             output: [
+                [1, 3],
+                [9, 11]
+             ]
+             */
+            const mapMatrixParts = (fn=(subMatrix, row, column)=>{}, w=1, h=1) => {
+                return (matrix) => {
+                    const height = matrix.length;
+                    const width = matrix[0].length;
+                    const newMatrix = [];
+                    
+                    const selectSubMatrix = (i, j, w, h) => {
+                        const box = [];
+
+                        for (let bI = 0; bI < h; bI++) {
+                            const matrixRow = matrix[i + bI];
+                            if (!matrixRow) continue;
+
+                            box[bI] = [];
+
+                            for (let bJ = 0; bJ < w; bJ++) {
+                                const matrixCell = matrixRow[j + bJ];
+
+                                if (!matrixCell) continue;
+
+                                box[bI].push(matrixCell);
+                            }
+                        }
+
+                        return box;
+                    }
+
+                    for (let i = 0; i < height; i += h) {
+                        newMatrix[i/h] = [];
+                        const rowStart = matrix[i];
+
+                        for (let j = 0; j < width; j += w) {
+                            const colStart = rowStart[j];
+
+                            const subMatrix = selectSubMatrix(i, j, w, h);
+
+                            newMatrix[i/h][j/w] = fn(subMatrix, i, j)
+                        }
+                    }
+
                     return newMatrix;
                 }
             }
@@ -75,12 +144,8 @@
                     const keepJ = Math.floor(width / newWidth);
                     const keepI = Math.floor(height / newHeight); 
 
-                    const newMatrix = matrix.filter((_, i) => (i + 1) % keepI === 0);
-
-                    newMatrix.forEach((row, i) => {
-                        newMatrix[i] = row.filter((_, j) => (j + 1) % keepJ === 0);
-                    });
-
+                    const newMatrix = mapMatrixParts((el) => el[0][0], keepJ, keepI)(matrix);
+  
                     return newMatrix;
             }
 
@@ -105,7 +170,7 @@
             }
 
             const mapMatrixFns = {
-                pickFirst: mapMatrix((el) => {
+                pickFirst: mapMatrix((el, i, j) => {
                     return el[0];
                 }),
                 inverse: mapMatrix((el) => {
@@ -230,16 +295,48 @@
                     showInfo(`resized:\n height ${height} -> ${matrixCanvasImage.imageData.height}\n width ${width} -> ${matrixCanvasImage.imageData.width}`);
                 }
 
+                // quantize
                 // matrixCanvasImage.setRGBAMatrix(
-                //     mapMatrix(quantize(1))(matrixCanvasImage.matrix)
+                //     mapMatrix(quantize(2))(matrixCanvasImage.matrix)
                 // );
+
+                // pick max from each cell
+                // matrixCanvasImage.setRGBAMatrix(
+                //     mapMatrixParts(
+                //         (subMatrix) => {
+                //             const convertToWb = mapMatrixFns.pickFirst(subMatrix);
+                //             const flatted = convertToWb.flat(2);
+
+                //             const maxPixel = Math.max(...flatted);
+                //             const minPixel = Math.min(...flatted);
+                //             const average = Math.floor(flatted.reduce((acc, el) => acc + el, 0) / flatted.length);
+
+                //             return getWBCell(average)
+                //         }, 2, 2)(matrixCanvasImage.matrix)
+                // )
+
                 showHistogram(matrixCanvasImage.matrix);
             }
 
             matrixCanvasImage.loadImage(imgs.lena).then(onLoadImage);
             // matrixCanvasImage.setRGBAMatrix(generateMatrix(128, 128, (i, j) => getWBCell(i + j + 1)));
             
-            // showHistogram(matrixCanvasImage.matrix);
+            // matrixCanvasImage.setRGBAMatrix(
+            //         mapMatrixParts(
+            //             (subMatrix) => {
+            //                 const convertToWb = mapMatrixFns.pickFirst(subMatrix);
+            //                 const flatted = convertToWb.flat(2);
+
+            //                 // const maxPixel = Math.max(...flatted);
+            //                 // const minPixel = Math.min(...flatted);
+            //                 const average = Math.floor(flatted.reduce((acc, el) => acc + el, 0) / flatted.length);
+                     
+            //                 return getWBCell(average)
+            //             }, 2, 2)(matrixCanvasImage.matrix)
+            //     )
+
+
+            showHistogram(matrixCanvasImage.matrix);
 
 
             btnShowMatrix.onclick = function() {
