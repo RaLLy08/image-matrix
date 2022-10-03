@@ -46,6 +46,7 @@
              */
             const mapMatrix = (fn=(el, row, column)=>{}) => {
                 return (matrix) => {
+                    if (!matrix[0]) debugger
                     const height = matrix.length;
                     const width = matrix[0].length;
                     const newMatrix = [];
@@ -336,7 +337,7 @@
             //     )
 
 
-            showHistogram(matrixCanvasImage.matrix);
+            // showHistogram(matrixCanvasImage.matrix);
 
 
             btnShowMatrix.onclick = function() {
